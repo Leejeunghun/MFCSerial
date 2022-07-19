@@ -49,7 +49,14 @@ END_MESSAGE_MAP()
 
 // CMFCSerialDlg 대화 상자
 
+UINT Thread_Reive(LPVOID param)
+{
+	CMFCSerialDlg* pDlg = (CMFCSerialDlg*)param;
 
+	pDlg->ConnectSerial();
+
+	return true;
+}
 
 CMFCSerialDlg::CMFCSerialDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_MFCSERIAL_DIALOG, pParent)
@@ -177,104 +184,85 @@ void CMFCSerialDlg::ConnectSerial()
 	int i = 0;
 	int j = 0;
 	int var[4];
-	char temp[6] = {};
 	char* end = NULL;
-	char result[10] = {};
+	char result[255] = {};
+
+	char temp[9] = { 115,101,110,100,109,101,255,255,255 };
+
+
+
+	
 	while (SP->IsConnected())
 	{
+		if (b_SendCheck == true)
+		{
+			SP->WriteData(c_message, str_message.length() + 3);
+			b_SendCheck == false;
+		}
+
 		readResult = SP->ReadData(incomingData, dataLength);
 		int count = 0;
+		
+
 
 		printf("Bytes read: (0 means no data available) %i\n",readResult);
 		incomingData[readResult] = 0;
-		
-		printf("%02x", incomingData[0]);
-		printf("%02x", incomingData[1]);
-		printf("%02x", incomingData[2]);
-		printf("%02x", incomingData[3]);
-		printf("%02x\n", incomingData[4]);
-
-		printf("%c", incomingData[0]);
-
-		for (i = 0; i < 4; ++i)
+		for (i = 0; i < 10; ++i)
 		{
-			temp[0] = incomingData[i * 2];
-			temp[1] = incomingData[i * 2 + 1];
-			//var[i] = (int)strtol(temp, &end, 8);
-			printf("값[%d]: %d\n", i * 2, temp[0]);
-			printf("값[%d]: %d\n", i * 2+1, temp[1]);
-
-			result[i * 2] = temp[0];
-			result[i * 2+1] = temp[1];
+			result[i * 2] = incomingData[i * 2];
+			result[i * 2+1] = incomingData[i * 2 + 1];
 
 		}
 		//명령어 만 확인
-		for (i = 0; i < 8; i++)
+		for (i = 0; i < 20; i++)
 		{
 			if (result[i] == -1 && result[i + 1] == -1 && result[i + 2] == -1)
 			{
-				printf("명령값[%d] ",i);
+				printf("명령 길이[%d] ",i);
 				for (j = 0; j < i; j++)
 				{
 					printf(" %x",  result[j]);
 				}
-				printf("\n",  result[j]);
+				printf("\n");
+				break;
 			}
 
 		}
 
 
-		Sleep(4000);
+		Sleep(500);
 	}
 	return ;
 }
 
 void CMFCSerialDlg::SendSerial()
 {
-	printf("Welcome to the serial test app!\n\n");
+	b_SendCheck = true;
+	CString test;
+	GetDlgItem(IDC_ED_MESSAGE)->GetWindowTextW(test);
 
-	Serial* SP = new Serial("\\\\.\\COM7");    // adjust as needed
+	str_message = std::string(CT2CA(test));
 
-	if (SP->IsConnected())
-		printf("We're connected");
+	for (int i = 0; i < str_message.length(); ++i)
+		c_message[i] = (char)str_message[i];
+	c_message[str_message.length()] = 255;
+	c_message[str_message.length() + 1] = 255;
+	c_message[str_message.length() + 2] = 255;
 
-	char incomingData[256] = "";			// don't forget to pre-allocate memory
-	unsigned char* bytearray = NULL;
-	//printf("%s\n",incomingData);
-	int dataLength = 255;
-	int readResult = 0;
-
-
-	char* result;
-	int i = 0;
-	int var[4];
-	char temp[6] = {};
-	char* end = NULL;
-
-	char array[] = { 0xff,0xff,0xff };
-	while (SP->IsConnected())
-	{
-		readResult = SP->ReadData(incomingData, dataLength);
-		SP->WriteData("page page1", 255);
-		SP->WriteData(array, 255);
-		Sleep(4000);
-		SP->WriteData("page page0", 255);
-		SP->WriteData(array, 255);
-		Sleep(4000);
-
-	}
 	return;
 }
 
 void CMFCSerialDlg::OnBnClickedBtnConnect()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	ConnectSerial();
+
+	AfxBeginThread(Thread_Reive, this);
 }
 
 
 void CMFCSerialDlg::OnBnClickedBtnSend()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+
 	SendSerial();
 }

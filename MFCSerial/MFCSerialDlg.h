@@ -4,7 +4,14 @@
 
 #pragma once
 #include "SerialClass.h"
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <iterator>
 
+using std::cout; using std::endl;
+using std::string; using std::hex;
+using std::stringstream;
 // CMFCSerialDlg 대화 상자
 class CMFCSerialDlg : public CDialogEx
 {
@@ -34,6 +41,11 @@ protected:
 public:
 	void ConnectSerial();
 	void SendSerial();
+	bool b_SendCheck = false; // false = 보낼 것 없음 // true = 보낼 필요 있음
+
+	char c_message[255] = {};
+	string str_message;
+
 	afx_msg void OnBnClickedBtnConnect();
 	afx_msg void OnBnClickedBtnSend();
 };
