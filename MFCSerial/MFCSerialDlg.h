@@ -33,5 +33,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	void ConnectSerial();
+	void SendSerial();
 	afx_msg void OnBnClickedBtnConnect();
+	afx_msg void OnBnClickedBtnSend();
 };

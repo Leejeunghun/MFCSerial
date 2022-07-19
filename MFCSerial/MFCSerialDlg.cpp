@@ -67,6 +67,7 @@ BEGIN_MESSAGE_MAP(CMFCSerialDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BTN_CONNECT, &CMFCSerialDlg::OnBnClickedBtnConnect)
+	ON_BN_CLICKED(IDC_BTN_SEND, &CMFCSerialDlg::OnBnClickedBtnSend)
 END_MESSAGE_MAP()
 
 
@@ -173,29 +174,107 @@ void CMFCSerialDlg::ConnectSerial()
 	int readResult = 0;
 
 
-	char* result;
-
-
-
+	int i = 0;
+	int j = 0;
+	int var[4];
+	char temp[6] = {};
+	char* end = NULL;
+	char result[10] = {};
 	while (SP->IsConnected())
 	{
 		readResult = SP->ReadData(incomingData, dataLength);
+		int count = 0;
+
 		printf("Bytes read: (0 means no data available) %i\n",readResult);
 		incomingData[readResult] = 0;
-
+		
 		printf("%02x", incomingData[0]);
 		printf("%02x", incomingData[1]);
 		printf("%02x", incomingData[2]);
 		printf("%02x", incomingData[3]);
-		printf("%02x", incomingData[4]);
+		printf("%02x\n", incomingData[4]);
 
-		Sleep(500);
+		printf("%c", incomingData[0]);
+
+		for (i = 0; i < 4; ++i)
+		{
+			temp[0] = incomingData[i * 2];
+			temp[1] = incomingData[i * 2 + 1];
+			//var[i] = (int)strtol(temp, &end, 8);
+			printf("값[%d]: %d\n", i * 2, temp[0]);
+			printf("값[%d]: %d\n", i * 2+1, temp[1]);
+
+			result[i * 2] = temp[0];
+			result[i * 2+1] = temp[1];
+
+		}
+		//명령어 만 확인
+		for (i = 0; i < 8; i++)
+		{
+			if (result[i] == -1 && result[i + 1] == -1 && result[i + 2] == -1)
+			{
+				printf("명령값[%d] ",i);
+				for (j = 0; j < i; j++)
+				{
+					printf(" %x",  result[j]);
+				}
+				printf("\n",  result[j]);
+			}
+
+		}
+
+
+		Sleep(4000);
 	}
 	return ;
+}
+
+void CMFCSerialDlg::SendSerial()
+{
+	printf("Welcome to the serial test app!\n\n");
+
+	Serial* SP = new Serial("\\\\.\\COM7");    // adjust as needed
+
+	if (SP->IsConnected())
+		printf("We're connected");
+
+	char incomingData[256] = "";			// don't forget to pre-allocate memory
+	unsigned char* bytearray = NULL;
+	//printf("%s\n",incomingData);
+	int dataLength = 255;
+	int readResult = 0;
+
+
+	char* result;
+	int i = 0;
+	int var[4];
+	char temp[6] = {};
+	char* end = NULL;
+
+	char array[] = { 0xff,0xff,0xff };
+	while (SP->IsConnected())
+	{
+		readResult = SP->ReadData(incomingData, dataLength);
+		SP->WriteData("page page1", 255);
+		SP->WriteData(array, 255);
+		Sleep(4000);
+		SP->WriteData("page page0", 255);
+		SP->WriteData(array, 255);
+		Sleep(4000);
+
+	}
+	return;
 }
 
 void CMFCSerialDlg::OnBnClickedBtnConnect()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	ConnectSerial();
+}
+
+
+void CMFCSerialDlg::OnBnClickedBtnSend()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	SendSerial();
 }
