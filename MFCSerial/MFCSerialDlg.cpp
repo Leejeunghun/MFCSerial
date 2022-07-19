@@ -175,36 +175,25 @@ void CMFCSerialDlg::ConnectSerial()
 		printf("We're connected");
 
 	char incomingData[256] = "";			// don't forget to pre-allocate memory
+	char result[255] = {};
 	unsigned char* bytearray = NULL;
 	//printf("%s\n",incomingData);
 	int dataLength = 255;
 	int readResult = 0;
 
-
 	int i = 0;
 	int j = 0;
-	int var[4];
-	char* end = NULL;
-	char result[255] = {};
 
-	char temp[9] = { 115,101,110,100,109,101,255,255,255 };
-
-
-
-	
 	while (SP->IsConnected())
 	{
 		if (b_SendCheck == true)
 		{
 			SP->WriteData(c_message, str_message.length() + 3);
-			b_SendCheck == false;
+			b_SendCheck = false;
 		}
 
 		readResult = SP->ReadData(incomingData, dataLength);
-		int count = 0;
 		
-
-
 		printf("Bytes read: (0 means no data available) %i\n",readResult);
 		incomingData[readResult] = 0;
 		for (i = 0; i < 10; ++i)
@@ -228,7 +217,6 @@ void CMFCSerialDlg::ConnectSerial()
 			}
 
 		}
-
 
 		Sleep(500);
 	}
