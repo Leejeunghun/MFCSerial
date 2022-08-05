@@ -41,6 +41,7 @@ protected:
 public:
 	void ConnectSerial();
 	void SendSerial();
+	void ReadSerial(char c_message[]);
 	bool b_SendCheck = false; // false = 보낼 것 없음 // true = 보낼 필요 있음
 
 	char c_message[255] = {};

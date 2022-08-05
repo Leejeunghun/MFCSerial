@@ -193,7 +193,11 @@ void CMFCSerialDlg::ConnectSerial()
 		}
 
 		readResult = SP->ReadData(incomingData, dataLength);
-		
+		if (readResult == 0)//명령어가 없으므로 쉰다/
+		{
+			Sleep(500);
+			continue;
+		}
 		printf("Bytes read: (0 means no data available) %i\n",readResult);
 		incomingData[readResult] = 0;
 		for (i = 0; i < 10; ++i)
@@ -215,7 +219,7 @@ void CMFCSerialDlg::ConnectSerial()
 				printf("\n");
 				break;
 			}
-
+			ReadSerial(result);
 		}
 
 		Sleep(500);
@@ -238,6 +242,22 @@ void CMFCSerialDlg::SendSerial()
 	c_message[str_message.length() + 2] = 255;
 
 	return;
+}
+
+void CMFCSerialDlg::ReadSerial(char c_message[])
+{
+	if (c_message[0] == 0)
+	{
+		printf("명령어 무효 \n");
+	}
+	else if (c_message[0] == 26)
+	{
+		printf("유효하지 않는 변수 명 사용\n");
+	}
+	else if (c_message[0] == 101)
+	{
+		printf("버튼 입력");
+	}
 }
 
 void CMFCSerialDlg::OnBnClickedBtnConnect()
