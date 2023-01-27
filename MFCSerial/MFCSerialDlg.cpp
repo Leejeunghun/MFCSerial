@@ -169,7 +169,7 @@ void CMFCSerialDlg::ConnectSerial()
 {
 	printf("Welcome to the serial test app!\n\n");
 
-	Serial* SP = new Serial("\\\\.\\COM7");    // adjust as needed
+	Serial* SP = new Serial("\\\\.\\COM9");    // adjust as needed
 
 	if (SP->IsConnected())
 		printf("We're connected");
@@ -260,6 +260,26 @@ void CMFCSerialDlg::ReadSerial(char c_message[])
 	}
 }
 
+
+
+void CMFCSerialDlg::SendSerial_Device()
+{
+	b_SendCheck = true;
+	CString test;
+	GetDlgItem(IDC_ED_MESSAGE)->GetWindowTextW(test);
+
+	CStringArray str;
+
+
+
+	str_message = std::string(CT2CA(test));
+
+	c_message[0] = 2;
+	for (int i = 1; i < str_message.length(); ++i)
+		c_message[i] = (char)str_message[i];
+	c_message[str_message.length()] = 3;
+}
+
 void CMFCSerialDlg::OnBnClickedBtnConnect()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
@@ -272,5 +292,36 @@ void CMFCSerialDlg::OnBnClickedBtnSend()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 
-	SendSerial();
+//	SendSerial();
+	SendSerial_Device();
 }
+
+int CMFCSerialDlg::splitString(CString str, CString var, CStringArray& strs)
+{
+	int count = 0;
+
+	CString tempStr = str;
+
+	int length = str.GetLength();
+
+	while (length)
+	{
+		int find = tempStr.Find(var);
+		if (find != -1)
+		{
+			CString temp = tempStr.Left(find);
+			strs.Add(temp);
+			int varLen = _tcslen(var);
+			tempStr = tempStr.Mid(find + varLen);
+		}
+		else
+		{
+			strs.Add(tempStr);
+			length = 0;
+		}
+		count++;
+
+	}
+	return count;
+}
+
