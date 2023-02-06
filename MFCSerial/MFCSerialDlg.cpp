@@ -7,7 +7,10 @@
 #include "MFCSerial.h"
 #include "MFCSerialDlg.h"
 #include "afxdialogex.h"
-
+#include "afxwin.h"
+#include <vector>
+#include <sstream>
+using namespace std;
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -58,6 +61,15 @@ UINT Thread_Reive(LPVOID param)
 	return true;
 }
 
+UINT Thread_Reive_DGUS(LPVOID param)
+{
+	CMFCSerialDlg* pDlg = (CMFCSerialDlg*)param;
+
+	pDlg->ConnectSerial("\\\\\.\\\\\COM3",115200);
+
+	return true;
+}
+
 CMFCSerialDlg::CMFCSerialDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_MFCSERIAL_DIALOG, pParent)
 {
@@ -75,6 +87,9 @@ BEGIN_MESSAGE_MAP(CMFCSerialDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BTN_CONNECT, &CMFCSerialDlg::OnBnClickedBtnConnect)
 	ON_BN_CLICKED(IDC_BTN_SEND, &CMFCSerialDlg::OnBnClickedBtnSend)
+	ON_BN_CLICKED(IDC_BTN_DGUS, &CMFCSerialDlg::OnBnClickedBtnDgus)
+	ON_BN_CLICKED(IDC_BTN_SEND2, &CMFCSerialDlg::OnBnClickedBtnSend2)
+	ON_BN_CLICKED(IDC_BUTTON1, &CMFCSerialDlg::OnBnClickedButton1)
 END_MESSAGE_MAP()
 
 
@@ -227,6 +242,68 @@ void CMFCSerialDlg::ConnectSerial()
 	return ;
 }
 
+void CMFCSerialDlg::ConnectSerial(const char* portName, unsigned long porSpeed)
+{
+	printf("Welcome to the serial test app!\n\n");
+
+	Serial* SP = new Serial(portName, porSpeed);    // adjust as needed
+
+	if (SP->IsConnected())
+		printf("We're connected");
+
+	char incomingData[256] = "";			// don't forget to pre-allocate memory
+	char result[255] = {};
+	unsigned char* bytearray = NULL;
+	//printf("%s\n",incomingData);
+	int dataLength = 255;
+	int readResult = 0;
+
+	int i = 0;
+	int j = 0;
+
+	while (SP->IsConnected())
+	{
+		if (b_SendCheck == true)
+		{
+			SP->WriteData(c_message, str_message.length());
+			b_SendCheck = false;
+		}
+
+		readResult = SP->ReadData(incomingData, dataLength);
+		if (readResult == 0)//명령어가 없으므로 쉰다/
+		{
+			Sleep(500);
+			continue;
+		}
+		printf("Bytes read: (0 means no data available) %i\n", readResult);
+		incomingData[readResult] = 0;
+		for (i = 0; i < 10; ++i)
+		{
+			result[i * 2] = incomingData[i * 2];
+			result[i * 2 + 1] = incomingData[i * 2 + 1];
+
+		}
+		//명령어 만 확인
+		for (i = 0; i < 20; i++)
+		{
+			if (result[i] == -1 && result[i + 1] == -1 && result[i + 2] == -1)
+			{
+				printf("명령 길이[%d] ", i);
+				for (j = 0; j < i; j++)
+				{
+					printf(" %x", result[j]);
+				}
+				printf("\n");
+				break;
+			}
+			ReadSerial(result);
+		}
+
+		Sleep(500);
+	}
+	return;
+}
+
 void CMFCSerialDlg::SendSerial()
 {
 	b_SendCheck = true;
@@ -270,14 +347,50 @@ void CMFCSerialDlg::SendSerial_Device()
 
 	CStringArray str;
 
-
-
 	str_message = std::string(CT2CA(test));
 
 	c_message[0] = 2;
 	for (int i = 1; i < str_message.length(); ++i)
 		c_message[i] = (char)str_message[i];
 	c_message[str_message.length()] = 3;
+}
+
+vector<string> split(string input, char delimiter) {
+	vector<string> answer;
+	stringstream ss(input);
+	string temp;
+
+	while (getline(ss, temp, delimiter)) {
+		answer.push_back(temp);
+	}
+
+	return answer;
+}
+
+void CMFCSerialDlg::SendSerial_DGUS()
+{
+	b_SendCheck = true;
+	CString test;
+	GetDlgItem(IDC_ED_MESSAGE)->GetWindowTextW(test);
+
+	CStringArray str;
+	CString var;
+	var = " ";
+	
+	str_message = std::string(CT2CA(test));
+
+	unsigned int nHexValue = 0;
+	vector<string> result = split(str_message, ' ');
+	for (int i = 0; i < result.size(); i++) {
+		stringstream convert(result[i]);
+		convert >> std::hex >> nHexValue;
+		cout << std::hex << nHexValue << endl;
+
+		c_message[i] = nHexValue;
+	}
+	c_message_length = result.size();
+
+	printf("send");
 }
 
 void CMFCSerialDlg::OnBnClickedBtnConnect()
@@ -325,3 +438,38 @@ int CMFCSerialDlg::splitString(CString str, CString var, CStringArray& strs)
 	return count;
 }
 
+
+
+void CMFCSerialDlg::OnBnClickedBtnDgus()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	AfxBeginThread(Thread_Reive_DGUS, this);
+}
+
+
+void CMFCSerialDlg::OnBnClickedBtnSend2()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	SendSerial_DGUS();
+}
+
+
+void CMFCSerialDlg::OnBnClickedButton1()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	string test = "5a 59";
+
+	unsigned int nHexValue = 0;
+
+	vector<string> result = split(test, ' ');
+	for (int i = 0; i < result.size(); i++) {
+		cout << result[i] << " ";
+
+		stringstream convert(result[i]);
+		convert >> std::hex >> nHexValue;
+		cout << std::hex << nHexValue << endl;
+
+		c_message[i] = nHexValue;
+	}
+
+}

@@ -22,6 +22,8 @@ private:
 public:
     //Initialize Serial communication with the given COM port
     Serial(const char* portName);
+    Serial(const char* portName, unsigned int BaudRate);
+
     //Close the connection
     ~Serial();
     //Read data in a buffer, if nbChar is greater than the

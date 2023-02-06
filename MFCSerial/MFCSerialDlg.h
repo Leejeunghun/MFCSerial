@@ -40,17 +40,26 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	void ConnectSerial();
+	void ConnectSerial(const char* portName, unsigned long porSpeed);
+
+
 	void SendSerial();
 
 	void SendSerial_Device();
+	void SendSerial_DGUS();
+
 
 	int splitString(CString str, CString var, CStringArray& strs);
 	void ReadSerial(char c_message[]);
 	bool b_SendCheck = false; // false = 보낼 것 없음 // true = 보낼 필요 있음
 
 	char c_message[255] = {};
+	int c_message_length = 0;
 	string str_message;
 
 	afx_msg void OnBnClickedBtnConnect();
 	afx_msg void OnBnClickedBtnSend();
+	afx_msg void OnBnClickedBtnDgus();
+	afx_msg void OnBnClickedBtnSend2();
+	afx_msg void OnBnClickedButton1();
 };
