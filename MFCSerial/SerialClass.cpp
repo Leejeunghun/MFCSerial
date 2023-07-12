@@ -46,7 +46,7 @@ Serial::Serial(const char* portName)
         else
         {
             //Define serial connection parameters for the arduino board
-            dcbSerialParams.BaudRate = CBR_19200;
+            dcbSerialParams.BaudRate = CBR_115200;
             dcbSerialParams.ByteSize = 8;
             dcbSerialParams.StopBits = ONESTOPBIT;
             dcbSerialParams.Parity = NOPARITY;
@@ -194,6 +194,22 @@ int Serial::ReadData(char* buffer, unsigned int nbChar)
 
 
 bool Serial::WriteData(const char* buffer, unsigned int nbChar)
+{
+    DWORD bytesSend;
+
+    //Try to write the buffer on the Serial port
+    if (!WriteFile(this->hSerial, (void*)buffer, nbChar, &bytesSend, 0))
+    {
+        //In case it don't work get comm error and return false
+        ClearCommError(this->hSerial, &this->errors, &this->status);
+
+        return false;
+    }
+    else
+        return true;
+}
+
+bool Serial::WriteData(const unsigned char* buffer, unsigned int nbChar)
 {
     DWORD bytesSend;
 

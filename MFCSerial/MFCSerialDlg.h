@@ -40,12 +40,17 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	void ConnectSerial();
+	void ConnectSerial(int test);
+
+	Serial* SP;
 	void ConnectSerial(const char* portName, unsigned long porSpeed);
+	void DisconnectSerial();
 
 
 	void SendSerial();
 
 	void SendSerial_Device();
+	void SendSerial_Device_test();
 	void SendSerial_DGUS();
 
 
@@ -62,4 +67,14 @@ public:
 	afx_msg void OnBnClickedBtnDgus();
 	afx_msg void OnBnClickedBtnSend2();
 	afx_msg void OnBnClickedButton1();
+	afx_msg void OnBnClickedButton2();
+	afx_msg void OnBnClickedButton3();
+	afx_msg void OnBnClickedBtnConnect2();
+	afx_msg void OnBnClickedButton4();
+	afx_msg void OnBnClickedButton5();
+	afx_msg void OnBnClickedBtnSend3();
+
+	void PasrsingData(CString str_data, CString str_parsing);
+	unsigned int ascii_to_hex(const char* str, size_t size, uint8_t* hex);
+
 };

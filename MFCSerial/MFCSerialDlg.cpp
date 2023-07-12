@@ -65,7 +65,7 @@ UINT Thread_Reive_DGUS(LPVOID param)
 {
 	CMFCSerialDlg* pDlg = (CMFCSerialDlg*)param;
 
-	pDlg->ConnectSerial("\\\\\.\\\\\COM3",115200);
+	pDlg->ConnectSerial("\\\\\.\\\\\COM8",115200);
 
 	return true;
 }
@@ -90,6 +90,12 @@ BEGIN_MESSAGE_MAP(CMFCSerialDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_DGUS, &CMFCSerialDlg::OnBnClickedBtnDgus)
 	ON_BN_CLICKED(IDC_BTN_SEND2, &CMFCSerialDlg::OnBnClickedBtnSend2)
 	ON_BN_CLICKED(IDC_BUTTON1, &CMFCSerialDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON2, &CMFCSerialDlg::OnBnClickedButton2)
+	ON_BN_CLICKED(IDC_BUTTON3, &CMFCSerialDlg::OnBnClickedButton3)
+	ON_BN_CLICKED(IDC_BTN_CONNECT2, &CMFCSerialDlg::OnBnClickedBtnConnect2)
+	ON_BN_CLICKED(IDC_BUTTON4, &CMFCSerialDlg::OnBnClickedButton4)
+	ON_BN_CLICKED(IDC_BUTTON5, &CMFCSerialDlg::OnBnClickedButton5)
+	ON_BN_CLICKED(IDC_BTN_SEND3, &CMFCSerialDlg::OnBnClickedBtnSend3)
 END_MESSAGE_MAP()
 
 
@@ -184,7 +190,7 @@ void CMFCSerialDlg::ConnectSerial()
 {
 	printf("Welcome to the serial test app!\n\n");
 
-	Serial* SP = new Serial("\\\\.\\COM9");    // adjust as needed
+	Serial* SP = new Serial("\\\\.\\COM5");    // adjust as needed
 
 	if (SP->IsConnected())
 		printf("We're connected");
@@ -203,8 +209,12 @@ void CMFCSerialDlg::ConnectSerial()
 	{
 		if (b_SendCheck == true)
 		{
-			SP->WriteData(c_message, str_message.length() + 3);
+			SP->WriteData(c_message, sizeof(c_message));
 			b_SendCheck = false;
+			cout << c_message[0] << endl;
+			cout << c_message[1] << endl;
+			printf("%s\n", c_message);
+			memset(c_message, 0, sizeof(c_message));
 		}
 
 		readResult = SP->ReadData(incomingData, dataLength);
@@ -242,11 +252,42 @@ void CMFCSerialDlg::ConnectSerial()
 	return ;
 }
 
+void CMFCSerialDlg::ConnectSerial(int test)
+{
+	printf("Welcome to the serial test app!\n\n");
+
+	Serial* SP = new Serial("\\\\.\\COM5");    // adjust as needed
+
+	if (SP->IsConnected())
+		printf("We're connected");
+
+	char incomingData[256] = "";			// don't forget to pre-allocate memory
+	char result[255] = {};
+	unsigned char* bytearray = NULL;
+	//printf("%s\n",incomingData);
+	int dataLength = 255;
+	int readResult = 0;
+
+	int i = 0;
+	int j = 0;
+
+	while (SP->IsConnected())
+	{
+		if (b_SendCheck == true)
+		{
+			SP->WriteData(c_message, str_message.length());
+			b_SendCheck = false;
+		}
+		Sleep(500);
+	}
+	return;
+}
+
 void CMFCSerialDlg::ConnectSerial(const char* portName, unsigned long porSpeed)
 {
 	printf("Welcome to the serial test app!\n\n");
 
-	Serial* SP = new Serial(portName, porSpeed);    // adjust as needed
+	SP = new Serial(portName, porSpeed);    // adjust as needed
 
 	if (SP->IsConnected())
 		printf("We're connected");
@@ -284,36 +325,37 @@ void CMFCSerialDlg::ConnectSerial(const char* portName, unsigned long porSpeed)
 
 		}
 		//명령어 만 확인
-		for (i = 0; i < 20; i++)
+		for (j = 0; j < 20; j++)
 		{
-			if (result[i] == -1 && result[i + 1] == -1 && result[i + 2] == -1)
-			{
-				printf("명령 길이[%d] ", i);
-				for (j = 0; j < i; j++)
-				{
-					printf(" %x", result[j]);
-				}
-				printf("\n");
-				break;
-			}
-			ReadSerial(result);
+			printf(" %02x", result[j]);
 		}
-
+		printf("\n");
 		Sleep(500);
 	}
 	return;
+}
+
+void CMFCSerialDlg::DisconnectSerial()
+{
+	if (SP->IsConnected())
+	{
+		SP->~Serial();
+
+		printf("연결 헤제");
+	}
 }
 
 void CMFCSerialDlg::SendSerial()
 {
 	b_SendCheck = true;
 	CString test;
-	GetDlgItem(IDC_ED_MESSAGE)->GetWindowTextW(test);
+	GetDlgItem(IDC_ED_MESSAGE)->GetWindowText(test);
 
 	str_message = std::string(CT2CA(test));
 
 	for (int i = 0; i < str_message.length(); ++i)
 		c_message[i] = (char)str_message[i];
+
 	c_message[str_message.length()] = 255;
 	c_message[str_message.length() + 1] = 255;
 	c_message[str_message.length() + 2] = 255;
@@ -343,7 +385,7 @@ void CMFCSerialDlg::SendSerial_Device()
 {
 	b_SendCheck = true;
 	CString test;
-	GetDlgItem(IDC_ED_MESSAGE)->GetWindowTextW(test);
+	GetDlgItem(IDC_ED_MESSAGE)->GetWindowText(test);
 
 	CStringArray str;
 
@@ -353,6 +395,26 @@ void CMFCSerialDlg::SendSerial_Device()
 	for (int i = 1; i < str_message.length(); ++i)
 		c_message[i] = (char)str_message[i];
 	c_message[str_message.length()] = 3;
+}
+
+void CMFCSerialDlg::SendSerial_Device_test()
+{
+
+	CString test;
+	GetDlgItem(IDC_ED_MESSAGE)->GetWindowText(test);
+
+	CStringArray str;
+
+	str_message = std::string(CT2CA(test));
+	CString str_parsing;
+	str_parsing = " ";
+	
+	PasrsingData(test, str_parsing);
+	b_SendCheck = true;
+	/*
+	for (int i = 0; i < str_message.length(); ++i)
+		c_message[i] = (char)str_message[i];
+	*/
 }
 
 vector<string> split(string input, char delimiter) {
@@ -371,7 +433,7 @@ void CMFCSerialDlg::SendSerial_DGUS()
 {
 	b_SendCheck = true;
 	CString test;
-	GetDlgItem(IDC_ED_MESSAGE)->GetWindowTextW(test);
+	GetDlgItem(IDC_ED_MESSAGE)->GetWindowText(test);
 
 	CStringArray str;
 	CString var;
@@ -443,7 +505,19 @@ int CMFCSerialDlg::splitString(CString str, CString var, CStringArray& strs)
 void CMFCSerialDlg::OnBnClickedBtnDgus()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	AfxBeginThread(Thread_Reive_DGUS, this);
+	static bool b_switch = false;
+	if (b_switch == false)
+	{
+		AfxBeginThread(Thread_Reive_DGUS, this);
+		b_switch = true;
+	}
+	else
+	{
+		b_switch = false;
+		DisconnectSerial();
+
+	}
+
 }
 
 
@@ -457,19 +531,121 @@ void CMFCSerialDlg::OnBnClickedBtnSend2()
 void CMFCSerialDlg::OnBnClickedButton1()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	string test = "5a 59";
+	CString str_message;
+	str_message = "5A A5 1C 82 52 40 77 77 77 2e 70 6e 65 73 6f 6c 75 74 69 6f 6e 2e 63 6f 6d 2f FF FF";
+	GetDlgItem(IDC_ED_MESSAGE)->SetWindowText(str_message);
+	SendSerial_DGUS();
+}
 
-	unsigned int nHexValue = 0;
 
-	vector<string> result = split(test, ' ');
-	for (int i = 0; i < result.size(); i++) {
-		cout << result[i] << " ";
+void CMFCSerialDlg::OnBnClickedButton2()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	CString str_message;
+	str_message = "5A A5 1C 82 52 40 77 77 77 2e 6b 6e 76 69 73 69 6f 6e 2e 63 6f 6d 2f FF FF";
+	GetDlgItem(IDC_ED_MESSAGE)->SetWindowText(str_message);
+	SendSerial_DGUS();
+}
 
-		stringstream convert(result[i]);
-		convert >> std::hex >> nHexValue;
-		cout << std::hex << nHexValue << endl;
 
-		c_message[i] = nHexValue;
+void CMFCSerialDlg::OnBnClickedButton3()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	CString str_message;
+	str_message = "5A A5 07 82 45 00 1A D0 FF FF";
+	GetDlgItem(IDC_ED_MESSAGE)->SetWindowText(str_message);
+	SendSerial_DGUS();
+}
+
+
+void CMFCSerialDlg::OnBnClickedBtnConnect2()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+
+	AfxBeginThread(Thread_Reive, this);
+}
+
+
+void CMFCSerialDlg::OnBnClickedButton4()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	CString str_message;
+	str_message = "5A A5 07 82 00 84 5A 01 00 00";
+	GetDlgItem(IDC_ED_MESSAGE)->SetWindowText(str_message);
+	SendSerial_DGUS();
+}
+
+
+
+void CMFCSerialDlg::OnBnClickedButton5()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	CString test;
+
+
+}
+
+
+void CMFCSerialDlg::OnBnClickedBtnSend3()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	SendSerial_Device_test();
+}
+
+
+
+unsigned int CMFCSerialDlg::ascii_to_hex(const char* str, size_t size, uint8_t* hex)
+{
+	unsigned int i, h, high, low,ret;
+	for (h = 0, i = 0; i < size; i += 2, ++h) {
+		//9보다 큰 경우 : 알파벳 문자 'A' 이상인 문자로, 'A'를 빼고 10을 더함.
+		//9이하인 경우 : 숫자 입력으로 '0'을 빼면 실제 값이 구해짐.
+		high = (str[i] > '9') ? str[i] - 'A' + 10 : str[i] - '0';
+		low = (str[i + 1] > '9') ? str[i + 1] - 'A' + 10 : str[i + 1] - '0';
+		//high 4비트, low 4비트이므로, 1바이트를 만들어주기 위해 high를 왼쪽으로 4비트 shift
+		//이후 OR(|)연산으로 합
+		hex[h] = (high << 4) | low;
 	}
+	ret = (high << 4) + low;
+	return ret;
+	return h;
+}
+
+void CMFCSerialDlg::PasrsingData(CString str_data, CString str_parsing)
+{
+	CStringArray arr;
+
+	int Position = 0;
+	CString Token ;
+	uint8_t hex[128] = { 0, };
+	Token = str_data.Tokenize(str_parsing, Position);
+	int i = 0;
+	Token.MakeUpper();
+	if (Token != L"")
+	{
+
+		arr.Add(Token);
+		c_message[i]=ascii_to_hex(Token,2,hex);
+	}
+
+	while (!Token.IsEmpty())
+	{
+		// Get next token.
+		Token = str_data.Tokenize(str_parsing, Position);
+		Token.MakeUpper();
+		i++;
+		if (Token != L"")
+		{
+			arr.Add(Token);
+			c_message[i] = ascii_to_hex(Token, 2, hex);
+		}
+
+	}
+
+	str_data.Empty();
+	Token.Empty();
+
+	
+
 
 }
