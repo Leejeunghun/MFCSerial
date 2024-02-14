@@ -96,6 +96,7 @@ BEGIN_MESSAGE_MAP(CMFCSerialDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON4, &CMFCSerialDlg::OnBnClickedButton4)
 	ON_BN_CLICKED(IDC_BUTTON5, &CMFCSerialDlg::OnBnClickedButton5)
 	ON_BN_CLICKED(IDC_BTN_SEND3, &CMFCSerialDlg::OnBnClickedBtnSend3)
+	ON_BN_CLICKED(IDC_BUTTON6, &CMFCSerialDlg::OnBnClickedButton6)
 END_MESSAGE_MAP()
 
 
@@ -581,9 +582,12 @@ void CMFCSerialDlg::OnBnClickedButton5()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	CString test;
-
-
+	CString str_message;
+	str_message = "5A A5 07 82 00 A0 01 01 40 00";
+	GetDlgItem(IDC_ED_MESSAGE)->SetWindowText(str_message);
+	SendSerial_DGUS();
 }
+
 
 
 void CMFCSerialDlg::OnBnClickedBtnSend3()
@@ -648,4 +652,81 @@ void CMFCSerialDlg::PasrsingData(CString str_data, CString str_parsing)
 	
 
 
+}
+
+
+void CMFCSerialDlg::OnBnClickedButton6()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	char c_filename[40];
+	sprintf(c_filename, "DWIN_UPDATE\\41_V4.txt");
+	//sprintf(c_filename, "DWIN_UPDATE\\41.icl");
+
+	FileRead_C(c_filename);
+}
+
+void CMFCSerialDlg::FileRead()
+{
+	CString strDefaultPath = _T("");
+	CFileDialog pDlg(TRUE, _T("Files (*.txt)"), NULL,
+		OFN_FILEMUSTEXIST |		// 존재하는 파일만 선택 가능
+		OFN_PATHMUSTEXIST |	    // 존재하는 경로만 선택 가능
+		OFN_HIDEREADONLY |		// ReadOnly 체크박스 숨김
+		OFN_LONGNAMES			//긴 파일 이름 포맷 지원
+		, _T("Files (*.txt)|*.txt|All Files (*.*)|*.*|"));
+
+	if (pDlg.DoModal() == IDOK)
+	{
+		strDefaultPath = pDlg.GetPathName();
+	}
+
+	//파일 읽기! 
+	CFile file;
+	std::vector<CString> v_str_File; //파일 내용
+
+	file.Open(strDefaultPath, CFile::modeRead); //file을 열고 읽음
+	CArchive ar(&file, CArchive::load);
+	CString strTmp;
+	while (ar.ReadString(strTmp))
+	{
+		v_str_File.push_back(strTmp); //벡터에 담기 
+	}
+	ar.Close();
+	file.Close();
+}
+
+void CMFCSerialDlg::FileRead_C(char * filename)
+{
+	FILE* fp;
+	char buffer[721];
+
+	// 파일 열기
+
+	fp = fopen(filename, "r");
+
+	// 파일 읽기 보내는것 파싱 
+
+	char buffer_header[10] = "5A A5 ";
+	
+	int i = 1;
+	int i_address = 0x8000; 
+
+	while (fgets(buffer, sizeof(buffer), fp)) {
+		printf("줄바꿈\n");
+		printf(buffer_header);
+		printf("%x ",strlen(buffer));
+		printf("%x", i_address);
+
+		printf(buffer);
+
+		printf("번호 %d : ", i);
+
+		i_address = i_address + (120);
+		i = i + 1;
+
+		printf("\n");
+	}
+
+	// 파일 닫기
+	fclose(fp);
 }

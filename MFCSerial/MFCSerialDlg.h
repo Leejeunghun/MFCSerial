@@ -77,4 +77,15 @@ public:
 	void PasrsingData(CString str_data, CString str_parsing);
 	unsigned int ascii_to_hex(const char* str, size_t size, uint8_t* hex);
 
+	afx_msg void OnBnClickedButton6();
+
+	// 원격 업데이트 관련
+
+
+	//1단계 파일 읽기
+	void FileRead();
+	void FileRead_C(char*);
+
+
+
 };
